@@ -40,59 +40,85 @@ def myAI(state: GameState) -> Turn:
     # =         Your Code Goes Here        =
     # ======================================
 
-    (food_x, food_y) = list(food)[0]
-    (snake_x, snake_y) = my_snake.head
+    invalid_pos = list(walls) + my_snake_body[1:]
+    invalid_turns = []
 
-    print(f"Food: {food_x}, {food_y}")
+    for turn in list(Turn):
+        if my_snake.get_next_head(turn) in invalid_pos:
+            invalid_turns.append(turn)
+    
+    (snake_x, snake_y) = my_snake.head
+    (closest_food_x, closest_food_y) = list(food)[0]
+    shortest_food_dist = 9999999999999
+
+    print(f"Food: {closest_food_x}, {closest_food_y}")
     print(f"Snake: {snake_x}, {snake_y}")
 
-    dx = food_x - snake_x
-    dy = snake_y - food_y
+    for (food_x, food_y) in list(food):
+        dx = food_x - snake_x
+        dy = snake_y - food_y
+        dist = abs(dx) + abs(dy)
+        print(f"dist: {dist}, shortest: {shortest_food_dist}")
+        if dist < shortest_food_dist:
+            shortest_food_dist = dist
+            closest_food_x = food_x
+            closest_food_y = food_y
+
+    dx = closest_food_x - snake_x
+    dy = snake_y - closest_food_y
+    turn = Turn.STRAIGHT
 
     if abs(dx) >= abs(dy):
         if dx > 0:
             match my_snake_direction:
                 case Direction.UP:
-                    return Turn.RIGHT
+                    turn = Turn.RIGHT
                 case Direction.DOWN:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
                 case Direction.LEFT:
-                    return Turn.RIGHT
+                    turn = Turn.RIGHT
                 case Direction.RIGHT:
-                    return Turn.STRAIGHT
+                    turn = Turn.STRAIGHT
         elif dx < 0:
             match my_snake_direction:
                 case Direction.UP:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
                 case Direction.DOWN:
-                    return Turn.RIGHT
+                    turn = Turn.RIGHT
                 case Direction.LEFT:
-                    return Turn.STRAIGHT
+                    turn = Turn.STRAIGHT
                 case Direction.RIGHT:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
     else:
         if dy > 0:
             match my_snake_direction:
                 case Direction.UP:
-                    return Turn.STRAIGHT
+                    turn = Turn.STRAIGHT
                 case Direction.DOWN:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
                 case Direction.LEFT:
-                    return Turn.RIGHT
+                    turn = Turn.RIGHT
                 case Direction.RIGHT:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
         elif dy < 0:
             match my_snake_direction:
                 case Direction.UP:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
                 case Direction.DOWN:
-                    return Turn.STRAIGHT
+                    turn = Turn.STRAIGHT
                 case Direction.LEFT:
-                    return Turn.LEFT
+                    turn = Turn.LEFT
                 case Direction.RIGHT:
-                    return Turn.RIGHT
+                    turn = Turn.RIGHT
 
-    return Turn.RIGHT
+    if turn in invalid_turns:
+        for fix_turn in list(Turn):
+            if fix_turn not in invalid_turns:
+                turn = fix_turn
+                break
+        # if reach here, then dead anyways
+
+    return turn
 
     # return random.choice(list(Turn))
 
