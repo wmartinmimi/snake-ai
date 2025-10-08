@@ -20,6 +20,7 @@ def myAI(state: GameState) -> Turn:
 
     grid_width: int = state.width
     grid_height: int = state.height
+    # set of tuples (x, y)
     food: set = state.food
     walls: set = state.walls
     score: int = state.score
@@ -39,6 +40,60 @@ def myAI(state: GameState) -> Turn:
     # =         Your Code Goes Here        =
     # ======================================
 
+    (food_x, food_y) = list(food)[0]
+    (snake_x, snake_y) = my_snake.head
+
+    print(f"Food: {food_x}, {food_y}")
+    print(f"Snake: {snake_x}, {snake_y}")
+
+    dx = food_x - snake_x
+    dy = snake_y - food_y
+
+    if abs(dx) >= abs(dy):
+        if dx > 0:
+            match my_snake_direction:
+                case Direction.UP:
+                    return Turn.RIGHT
+                case Direction.DOWN:
+                    return Turn.LEFT
+                case Direction.LEFT:
+                    return Turn.RIGHT
+                case Direction.RIGHT:
+                    return Turn.STRAIGHT
+        elif dx < 0:
+            match my_snake_direction:
+                case Direction.UP:
+                    return Turn.LEFT
+                case Direction.DOWN:
+                    return Turn.RIGHT
+                case Direction.LEFT:
+                    return Turn.STRAIGHT
+                case Direction.RIGHT:
+                    return Turn.LEFT
+    else:
+        if dy > 0:
+            match my_snake_direction:
+                case Direction.UP:
+                    return Turn.STRAIGHT
+                case Direction.DOWN:
+                    return Turn.LEFT
+                case Direction.LEFT:
+                    return Turn.RIGHT
+                case Direction.RIGHT:
+                    return Turn.LEFT
+        elif dy < 0:
+            match my_snake_direction:
+                case Direction.UP:
+                    return Turn.LEFT
+                case Direction.DOWN:
+                    return Turn.STRAIGHT
+                case Direction.LEFT:
+                    return Turn.LEFT
+                case Direction.RIGHT:
+                    return Turn.RIGHT
+
+    return Turn.RIGHT
+
     # return random.choice(list(Turn))
 
     # ======================================
@@ -48,5 +103,5 @@ def myAI(state: GameState) -> Turn:
     # from examples.dumbAI import dumbAI
     # return dumbAI(state)
 
-    from examples.smartAI import smartAI
-    return smartAI(state)
+    # from examples.smartAI import smartAI
+    # return smartAI(state)
