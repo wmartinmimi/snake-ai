@@ -1,6 +1,8 @@
 import random
 from collections import deque
 from snake.logic import GameState, Turn, Snake, Direction
+from smartAI import smartAI as enemyAI
+from src.game_clone.patch import SnakeGame as PatchedSnakeGame
 
 """
 Your mission, should you choose to accept it, is to write the most cracked snake AI possible.
@@ -12,33 +14,68 @@ Below is all of the data you'll need, and some small examples that you can uncom
 """
 
 
-def myAI(state: GameState) -> Turn:
+def simulateTurn(game: PatchedSnakeGame, food) -> PatchedSnakeGame:
+    # if the game is not over
+    if not game.game_over:
 
-    # ======================================
-    # =         Some Useful data.          =
-    # ======================================
+        # moves all the snakes one by one
+        # note that the player's snake is at index 0
+        for i in range(len(game.snakes)):
+            if game.snakes[i].isAlive:
+                state = game.getGameState(i)
+                turn = internalAI(state, food) if i == 0 else enemyAI(state)
+                game.move_snake(i, turn)
+    return game
 
-    grid_width: int = state.width
-    grid_height: int = state.height
-    # set of tuples (x, y)
+
+def lookAhead(state: GameState) -> Turn:
+    original_length = len(state.snake.body_set)
+    for nth_food in range(len(set(state.food))):
+        game = PatchedSnakeGame(state)
+        food = nthClosestApple(state, nth_food)
+        for _ in range(640):
+            game = simulateTurn(game, food)
+            if original_length < len(game.snakes[0].body_set):
+                return internalAI(state, food)
+
+    return Turn.STRAIGHT
+
+
+def nthClosestApple(state: GameState, n: int) -> (int, int):
+    (snake_x, snake_y) = state.snake.head
+    (closest_food_x, closest_food_y) = list(state.food)[0]
+    shortest_food_dist = [99999999]
+    closest_food = []
+
+    print(f"Food: {closest_food_x}, {closest_food_y}")
+    print(f"Snake: {snake_x}, {snake_y}")
+
+    for (food_x, food_y) in list(state.food):
+        print(5)
+        dx = food_x - snake_x
+        dy = snake_y - food_y
+        dist = abs(dx) + abs(dy)
+        print(f"dist: {dist}, shortest: {shortest_food_dist}")
+        for idx, shortest in enumerate(shortest_food_dist):
+            print(6)
+            if dist < shortest:
+                print(7)
+                shortest_food_dist.insert(idx, dist)
+                closest_food.insert(idx, (food_x, food_y))
+                break
+
+    return closest_food[n]
+
+
+def internalAI(state: GameState, apple: (int, int)) -> Turn:
+    """
+    return turn and if successfully ate apple
+    """
     food: set = state.food
     walls: set = state.walls
-    score: int = state.score
     my_snake: Snake = state.snake
     my_snake_direction: Direction = Direction(state.snake.direction)
     my_snake_body: list = list(state.snake.body)
-    enemy_snakes = state.enemies
-
-    # you may also find the get_next_head() method of the Snake class useful!
-    # this tells you what position the snake's head will end up in for each of the moves
-    # you can then check for collisions, food etc
-    straight = my_snake.get_next_head(Turn.STRAIGHT)
-    left = my_snake.get_next_head(Turn.LEFT)
-    right = my_snake.get_next_head(Turn.RIGHT)
-
-    # ======================================
-    # =         Your Code Goes Here        =
-    # ======================================
 
     invalid_pos = list(walls) + my_snake_body[1:]
     invalid_turns = []
@@ -54,18 +91,9 @@ def myAI(state: GameState) -> Turn:
     print(f"Food: {closest_food_x}, {closest_food_y}")
     print(f"Snake: {snake_x}, {snake_y}")
 
-    for (food_x, food_y) in list(food):
-        dx = food_x - snake_x
-        dy = snake_y - food_y
-        dist = abs(dx) + abs(dy)
-        print(f"dist: {dist}, shortest: {shortest_food_dist}")
-        if dist < shortest_food_dist:
-            shortest_food_dist = dist
-            closest_food_x = food_x
-            closest_food_y = food_y
-
-    dx = closest_food_x - snake_x
-    dy = snake_y - closest_food_y
+    (food_x, food_y) = apple
+    dx = food_x - snake_x
+    dy = snake_y - food_y
     turn = Turn.STRAIGHT
 
     if abs(dx) >= abs(dy):
@@ -120,14 +148,10 @@ def myAI(state: GameState) -> Turn:
 
     return turn
 
-    # return random.choice(list(Turn))
+def myAI(state: GameState) -> Turn:
+    """
+    The main entry point for AI program
+    """
 
-    # ======================================
-    # =       Try out some examples!       =
-    # ======================================
+    return lookAhead(state)
 
-    # from examples.dumbAI import dumbAI
-    # return dumbAI(state)
-
-    # from examples.smartAI import smartAI
-    # return smartAI(state)
